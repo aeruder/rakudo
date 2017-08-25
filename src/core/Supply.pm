@@ -849,8 +849,8 @@ my class Supply does Awaitable {
         }
     }
 
-    method batch(Supply:D $self: :$elems, :$seconds ) {
-        return self if (!$elems or $elems == 1) and !$seconds;  # nothing to do
+    method batch(Supply:D $self: :$elems, :$seconds) {
+        my Int(Cool) $batch_size = (!$elems or $elems < 1) ?? 1 !! $elems;
         supply {
             my @batched;
             my $last_time;
@@ -875,7 +875,7 @@ my class Supply does Awaitable {
                         }
                         else {
                             @batched.push: val;
-                            flush if @batched.elems == $elems;
+                            flush if @batched.elems == $batch_size;
                         }
                         LAST { final-flush; }
                     }
@@ -895,7 +895,7 @@ my class Supply does Awaitable {
             else { # just $elems
                 whenever self -> \val {
                     @batched.push: val;
-                    flush if @batched.elems == $elems;
+                    flush if @batched.elems == $batch_size;
                     LAST { final-flush; }
                 }
             }
